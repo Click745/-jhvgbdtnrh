@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Тапалка с магазином и секретным призом</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #eef;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+  }
+  #counter {
+    font-size: 48px;
+    text-align: center;
+    margin: 10px 0;
+  }
+  /* Стиль для всех кнопок */
+  button {
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top:10px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  /* Яркие и красивые стили для кнопок */
+  #buyAutoClicker {
+    background-color: #4CAF50; /* зеленый */
+    color: white;
+  }
+  #buyAutoClicker:hover {
+    background-color: #45a049; transform: scale(1.05);
+  }
+
+  #buyMultiplier {
+    background-color: #2196F3; /* синий */
+    color: white;
+  }
+  #buyMultiplier:hover {
+    background-color: #0b7dda; transform: scale(1.05);
+  }
+
+  #backToMain {
+    background-color: #f39c12; /* оранжевый */
+    color: white;
+  }
+  #backToMain:hover {
+    background-color: #e67e22; transform: scale(1.05);
+  }
+
+  #buySecretPrize {
+    background-color: #e91e63; /* розовый */
+    color: white;
+  }
+  #buySecretPrize:hover {
+    background-color: #d81b60; transform: scale(1.05);
+  }
+
+  /* Кнопка-картинка */
+  #clickButton {
+    display: block;
+    margin: 20px auto;
+    cursor:pointer;
+    width:200px;
+  }
+
+  /* Вкладки */
+  .tabs {
+    display:flex; justify-content:center; margin-top:20px;
+  }
+  .tab {
+    padding:10px 20px; background-color:#ccc; margin-right:5px; cursor:pointer; border-radius:5px 5px 0 0; transition:.3s all;
+}
+.tab.active { background-color:#fff; font-weight:bold; }
+.tab:hover { background-color:#ddd; }
+
+ /* Контент вкладок */
+ .tabContent { display:none; border:1px solid #ccc; border-top:none; padding:20px; max-width:600px; margin:auto; background:#fff; border-radius:0 5px 5px 5px; }
+ .tabContent.active { display:block; }
+</style>
+</head>
+<body>
+<h1>Тапалка с магазином и секретным призом</h1>
+<div id="counter">0</div>
+<!-- Кнопка-картинка -->
+<img src="https://img.freepik.com/premium-vector/cartoon-duck_6996-1068.jpg" id="clickButton" alt="Кликни меня" title="Кликни меня"/>
+<!-- Вкладки -->
+<div class="tabs">
+<div class="tab active" data-tab="main">Главная</div>
+<div class="tab" data-tab="shop">Магазин</div>
+<div class="tab" data-tab="secret">Секретный приз</div>
+<div class="tab" data-tab="tasks">Задания</div>
+</div>
+<!-- Контент вкладок -->
+<div id="main" class="tabContent active">
+<p>Кликай на утку, чтобы зарабатывать клики!</p>
+<p>Доступно покупок за клики в магазине.</p>
+</div>
+<div id="shop" class="tabContent">
+<h2>Магазин улучшений</h2>
+<p>Ваш баланс кликов для покупок (используется при покупке): <span id="balanceClicks">0</span></p>
+<button id="buyAutoClicker">Купить авто-кликер (+1 клик/сек за $50)</button><br/>
+<button id="buyMultiplier">Увеличить множитель (x2 за $100)</button><br/>
+<button id="backToMain">Вернуться домой</button>
+</div>
+<div id="secret" class="tabContent">
+<h2>Секретный приз</h2>
+<p>Стоимость покупки - <b id="secretPrice">100000 кликов</b></p>
+<button id="buySecretPrize">Купить секретный приз</button>
+<div id="secretResult"></div>
+</div>
+<div id="tasks" class="tabContent">
+<h2>Задания</h2>
+<div style="margin-bottom:10px;">
+<span>Подписаться на ТГ канал:</span>
+<button id="subscribeTG">Подписаться на t.me/sss757</button>
+<p id="taskStatus"></p>
+</div>
+</div>
+
+<script>
+// Инициализация переменных из localStorage или установка по умолчанию
+let count = parseFloat(localStorage.getItem('count')) ||0; // счетчик кликов
+let autoClicks = parseInt(localStorage.getItem('autoClicks')) ||0; // авто-клики в секунду
+let multiplier= parseInt(localStorage.getItem('multiplier')) ||1; // множитель
+let balance= parseFloat(localStorage.getItem('balance')) ||0; // баланс для покупок
+let clickMultiplier = parseInt(localStorage.getItem('clickMultiplier')) ||1; // множитель кликов за одно нажатие
+
+// Цена услуги в магазине (увеличивается после каждой покупки)
+let servicePrice = parseInt(localStorage.getItem('servicePrice')) ||50;
+
+// Обновление отображения
+function updateDisplay() {
+ document.getElementById('counter').innerText = count.toFixed(0);
+ document.getElementById('balanceClicks').innerText = balance.toFixed(0);
+ document.getElementById('secretPrice').innerText = servicePrice + ' кликов';
+}
+
+// Переключение вкладок
+const tabs = document.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tabContent');
+
+tabs.forEach(tab => {
+ tab.addEventListener('click', () => {
+   tabs.forEach(t => t.classList.remove('active'));
+   tab.classList.add('active');
+   const target = tab.dataset.tab;
+
+   tabContents.forEach(tc => {
+     if(tc.id===target){
+       tc.classList.add('active');
+     } else{
+       tc.classList.remove('active');
+     }
+   });
+ });
+});
+
+// Обработка клика по утке
+document.getElementById('clickButton').addEventListener('click', () => {
+ count += clickMultiplier * multiplier;
+ balance += clickMultiplier * multiplier;
+ updateDisplay();
+ saveProgress();
+});
+
+// Авто-клики каждые секунду
+setInterval(() => {
+ if(autoClicks >0){
+   count += autoClicks * clickMultiplier * multiplier;
+   balance += autoClicks * clickMultiplier * multiplier;
+   updateDisplay();
+   saveProgress();
+ }
+},1000);
+
+// Магазин покупок
+document.getElementById('buyAutoClicker').addEventListener('click', () => {
+ if(balance >=50){
+   balance -=50;
+   autoClicks +=1;
+   updateDisplay();
+   saveProgress();
+ }
+});
+
+document.getElementById('buyMultiplier').addEventListener('click', () => {
+ if(balance >=100){
+   balance -=100;
+   multiplier *=2;
+   updateDisplay();
+   saveProgress();
+ }
+});
+
+// Вернуться домой
+document.getElementById('backToMain').addEventListener('click', () => {
+ tabs.forEach(t => t.classList.remove('active'));
+ document.querySelector('.tab[data-tab="main"]').classList.add('active');
+ tabContents.forEach(tc => tc.id==='main' ? tc.classList.add('active') : tc.classList.remove('active'));
+});
+
+// Задание "Подписаться на ТГ канал"
+const taskStatusEl = document.getElementById('taskStatus');
+const subscribeBtn = document.getElementById('subscribeTG');
+
+let taskCompleted = localStorage.getItem('taskCompleted') === 'true';
+
+if(taskCompleted){
+ taskStatusEl.innerText='Задание выполнено! +3500 кликов.';
+} else{
+ taskStatusEl.innerText='Не выполнено';
+}
+
+subscribeBtn.addEventListener('click', () => {
+ window.open("https://t.me/sss757", "_blank");
+ taskCompleted=true;
+ localStorage.setItem('taskCompleted','true');
+ balance +=3500*multiplier;
+ updateDisplay();
+ taskStatusEl.innerText='Задание выполнено! +3500 кликов.';
+});
+
+// Секретный приз
+const secretPrizes = [
+ {label:'Робот +10000 кликов/час', chance:10, effect:'robot'},
+ {label:'+150000 кликов к балансу', chance:20, effect:'cliks'},
+ {label:'Удвоить баланс', chance:30, effect:'double'},
+ {label:'+90000 кликов к балансу', chance:40, effect:'cliks'}
+];
+
+document.getElementById('buySecretPrize').addEventListener('click', () => {
+ if(balance >= servicePrice){
+   balance -=servicePrice;
+
+   // Увеличиваем цену услуги в шесть раз после покупки
+   servicePrice *=6;
+
+   localStorage.setItem('servicePrice', servicePrice);
+
+   const rand=Math.random()*100;
+
+   let cumulative=0;
+
+   let prize=null;
+
+   for(let p of secretPrizes){
+     cumulative+=p.chance;
+
+     if(rand<=cumulative){
+       prize=p;
+
+       break;}
+   }
+
+   let message='';
+
+   if(prize){
+     switch(prize.effect){
+       case 'robot':
+         message='Вы получили робота! Он добавит +10000 кликов каждый час.';
+         startRobot(); // запускаем робота
+         break;
+
+       case 'cliks':
+         count +=150000*multiplier;
+         message='Вам добавлено +150000 кликов!';
+         break;
+
+       case 'double':
+         multiplier *=2;
+         message='Множитель увеличен вдвое!';
+         break;
+
+       default:
+         message='Подарок получен!';
+     }
+   } else{
+     message='Подарок не выпал.';
+   }
+
+   document.getElementById('secretResult').innerText=message;
+
+   updateDisplay();
+
+   function startRobot() {
+     setInterval(() => {
+       count +=10000*multiplier;
+       updateDisplay();
+       saveProgress();
+     },3600000); // каждый час (3600000 мс)
+   }
+
+ } else{
+   alert("Недостаточно кликов для покупки!");
+ }
+});
+
+// Обработка выхода из страницы - сохраняем прогресс
+window.addEventListener("beforeunload", saveProgress);
+
+function saveProgress() {
+ localStorage.setItem('count', count);
+ localStorage.setItem('autoClicks', autoClicks);
+ localStorage.setItem('multiplier', multiplier);
+ localStorage.setItem('balance', balance);
+ localStorage.setItem('taskCompleted', taskCompleted);
+ localStorage.setItem('servicePrice', servicePrice);
+}
+
+// Инициализация отображения при загрузке страницы
+updateDisplay();
+
+</script>
+
+<!-- Конец скрипта -->
+<script></script>
+
+</body>
+</html>
